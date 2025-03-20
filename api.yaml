@@ -1,0 +1,139 @@
+openapi: 3.0.0
+info:
+  title: "Todo API"
+  version: "1.0.0"
+  contact:
+    name: Contact Name
+    email: contact@example.com
+    url: https://example.com/
+paths:
+  /todos:
+    get:
+      summary: Get todo list
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Todo"
+    post:
+      summary: Create todo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoCreateRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+  /todos/{id}:
+    get:
+      summary: Get a todo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "404":
+          description: Not Found
+    put:
+      summary: Update a todo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoUpdateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "404":
+          description: Not Found
+    delete:
+      summary: Delete a todo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+components:
+  schemas:
+    Todo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the todo
+        title:
+          type: string
+          description: The title of the todo
+        description:
+          type: string
+          description: The detailed information about the todo
+        completed:
+          type: boolean
+          description: Indicates if the todo is completed
+      required:
+        - id
+        - title
+        - completed
+
+    TodoCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the todo
+        description:
+          type: string
+          description: Additional description of the todo
+      required:
+        - title
+
+    TodoUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the todo
+        description:
+          type: string
+          description: Additional description of the todo
+        completed:
+          type: boolean
+          description: Indicates if the todo is completed
+      required:
+        - title
+        - completed
