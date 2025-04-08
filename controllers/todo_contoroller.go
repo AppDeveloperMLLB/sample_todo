@@ -9,7 +9,6 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/mllb/sampletodo/models"
-	"github.com/mllb/sampletodo/services"
 	"gorm.io/gorm"
 )
 
@@ -23,10 +22,10 @@ type GetTodoResponse struct {
 }
 
 type TodoController struct {
-	service services.TodoService
+	service TodoService
 }
 
-func NewTodoController(s services.TodoService) *TodoController {
+func NewTodoController(s TodoService) *TodoController {
 	return &TodoController{
 		service: s,
 	}
@@ -47,21 +46,21 @@ func (con *TodoController) CreateTodo(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		fmt.Println(err)
 		fmt.Printf("%+v\n", req)
-		return c.String(http.StatusBadRequest, "Bad Request")
+		return c.JSON(http.StatusBadRequest, map[string]string{"status": "Bad Request"})
 	}
 	v := validator.New()
 	if err := v.Struct(req); err != nil {
 		fmt.Println(err)
 		fmt.Printf("%+v\n", req)
-		return c.String(http.StatusBadRequest, "Bad Request")
+		return c.JSON(http.StatusBadRequest, map[string]string{"status": "Bad Request"})
 	}
 	err := con.service.CreateTodo(req.Title, req.Body)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Printf("%+v\n", req)
-		return c.String(http.StatusInternalServerError, "Internal Server Error")
+		return c.JSON(http.StatusInternalServerError, map[string]string{"status": "Internal Server Error"})
 	}
-	return c.String(http.StatusOK, "Success")
+	return c.JSON(http.StatusOK, map[string]string{"status": "Success"})
 }
 
 func (con *TodoController) GetTodo(c echo.Context) error {

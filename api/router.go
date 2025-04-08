@@ -4,9 +4,12 @@ import (
 	"crypto/sha256"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mllb/sampletodo/controllers"
+	appjwt "github.com/mllb/sampletodo/jwt"
 	"github.com/mllb/sampletodo/repositories"
 	"github.com/mllb/sampletodo/services"
 	"gorm.io/gorm"
@@ -14,8 +17,11 @@ import (
 
 func NewRouter(db *gorm.DB) *echo.Echo {
 	todoRepo := repositories.NewTodoRepository(db)
-	todoService := services.NewTodoService(*todoRepo)
-	todoController := controllers.NewTodoController(*todoService)
+	todoService := services.NewTodoService(todoRepo)
+	todoController := controllers.NewTodoController(todoService)
+	authRepo := repositories.NewAuthRepository(db)
+	authService := services.NewAuthService(authRepo)
+	authController := controllers.NewAuthController(authService)
 
 	e := echo.New()
 
@@ -36,7 +42,37 @@ func NewRouter(db *gorm.DB) *echo.Echo {
 
 	// Get todo by id
 	e.GET("/todo/:id", todoController.GetTodo)
+	// e.Static("/assets", "public/assets")
 
+	// e.File("/", "public/index.html") // GET /
+	// e.File("/signup", "public/signup.html") // GET /signup
+	e.POST("/signup", authController.SignUp) // POST /signup
+	// e.File("/login", "public/login.html") // GET /login
+	e.POST("/signin", authController.SignIn)   // POST /login
+	e.POST("/signout", authController.SignOut) // POST /signout
+	// e.File("/todos", "public/todos.html") // GET /todos
+	config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(appjwt.JwtCustomClaims)
+		},
+		SigningKey: []byte(appjwt.SigningKey),
+		ErrorHandler: func(c echo.Context, err error) error {
+			msg := "トークンが無効なのだ"
+			switch err {
+			case echojwt.ErrJWTMissing:
+				msg = "トークンがないのだ"
+			case echojwt.ErrJWTInvalid:
+				msg = "トークンが無効なのだ"
+			}
+
+			return c.JSON(http.StatusUnauthorized, msg)
+		},
+	}
+	api := e.Group("/api")
+	api.Use(echojwt.WithConfig(config)) // /api 下はJWTの認証が必要
+	// Get todo list
+	api.GET("/todo", todoController.GetTodoList)
+	// api.GET("/todos", handler.GetTodos) // GET /api/todos
 	// e.POST("/login", func(c echo.Context) error {
 	// 	req := new(LoginRequest)
 	// 	if err := c.Bind(&req); err != nil {

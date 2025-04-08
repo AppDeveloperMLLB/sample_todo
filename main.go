@@ -58,6 +58,7 @@ func fetchPassword() [32]byte {
 func migrateDatabase(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.Todo{},
+		&models.User{},
 	)
 }
 
