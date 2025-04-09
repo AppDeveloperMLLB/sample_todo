@@ -32,7 +32,12 @@ func NewTodoController(s TodoService) *TodoController {
 }
 
 func (con *TodoController) GetTodoList(c echo.Context) error {
-	todoList, err := con.service.GetTodoList()
+	uid, err := getUserID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "invalid token")
+	}
+
+	todoList, err := con.service.GetTodoList(uid)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -42,6 +47,11 @@ func (con *TodoController) GetTodoList(c echo.Context) error {
 }
 
 func (con *TodoController) CreateTodo(c echo.Context) error {
+	uid, err := getUserID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "invalid token")
+	}
+
 	req := new(CreateTodoRequest)
 	if err := c.Bind(&req); err != nil {
 		fmt.Println(err)
@@ -54,7 +64,7 @@ func (con *TodoController) CreateTodo(c echo.Context) error {
 		fmt.Printf("%+v\n", req)
 		return c.JSON(http.StatusBadRequest, map[string]string{"status": "Bad Request"})
 	}
-	err := con.service.CreateTodo(req.Title, req.Body)
+	err = con.service.CreateTodo(uid, req.Title, req.Body)
 	if err != nil {
 		fmt.Println(err)
 		fmt.Printf("%+v\n", req)
@@ -64,6 +74,11 @@ func (con *TodoController) CreateTodo(c echo.Context) error {
 }
 
 func (con *TodoController) GetTodo(c echo.Context) error {
+	uid, err := getUserID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "invalid token")
+	}
+
 	idStr := c.Param("id")
 	if idStr == "" {
 		return c.String(http.StatusBadRequest, "Bad Request")
@@ -76,7 +91,7 @@ func (con *TodoController) GetTodo(c echo.Context) error {
 	// uint型にキャストするのだ
 	id := uint(id64)
 
-	todo, err := con.service.GetTodo(id)
+	todo, err := con.service.GetTodo(uid, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.String(http.StatusNotFound, "Not Found")
@@ -89,6 +104,11 @@ func (con *TodoController) GetTodo(c echo.Context) error {
 }
 
 func (con *TodoController) UpdateTodo(c echo.Context) error {
+	uid, err := getUserID(c)
+	if err != nil {
+		return c.String(http.StatusUnauthorized, "invalid token")
+	}
+
 	idStr := c.Param("id")
 	if idStr == "" {
 		return c.String(http.StatusBadRequest, "Bad Request")
@@ -114,7 +134,7 @@ func (con *TodoController) UpdateTodo(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Bad Request")
 	}
 
-	err = con.service.UpdateTodo(id, req.Title, req.Body)
+	err = con.service.UpdateTodo(uid, id, req.Title, req.Body)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return c.String(http.StatusNotFound, "Not Found")

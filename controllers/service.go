@@ -6,11 +6,11 @@ import (
 
 //go:generate moq -out moq_test.go . TodoService AuthService
 type TodoService interface {
-	GetTodoList() ([]models.Todo, error)
-	CreateTodo(title string, body string) error
-	UpdateTodo(id uint, title string, body string) error
+	GetTodoList(uid uint) ([]models.Todo, error)
+	CreateTodo(uid uint, title string, body string) error
+	UpdateTodo(uid uint, id uint, title string, body string) error
 	// DeleteTodo(id string) error
-	GetTodo(id uint) (models.Todo, error)
+	GetTodo(uid uint, id uint) (models.Todo, error)
 }
 
 type AuthService interface {

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	jwtgo "github.com/golang-jwt/jwt/v5"
 	"github.com/mllb/sampletodo/jwt"
 	"github.com/mllb/sampletodo/repositories"
 )
@@ -50,13 +49,7 @@ func (s *AuthService) SignIn(email string, password string) (string, error) {
 		return "", errors.New("Invalid password")
 	}
 
-	claims := &jwt.JwtCustomClaims{
-		UID:   user.ID,
-		Email: user.Email,
-	}
-
-	token := jwtgo.NewWithClaims(jwtgo.SigningMethodHS256, claims)
-	t, err := token.SignedString(jwt.SigningKey)
+	t, err := jwt.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		return "", err
 	}

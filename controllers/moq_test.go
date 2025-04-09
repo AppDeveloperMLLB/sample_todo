@@ -18,16 +18,16 @@ var _ TodoService = &TodoServiceMock{}
 //
 //		// make and configure a mocked TodoService
 //		mockedTodoService := &TodoServiceMock{
-//			CreateTodoFunc: func(title string, body string) error {
+//			CreateTodoFunc: func(uid uint, title string, body string) error {
 //				panic("mock out the CreateTodo method")
 //			},
-//			GetTodoFunc: func(id uint) (models.Todo, error) {
+//			GetTodoFunc: func(uid uint, id uint) (models.Todo, error) {
 //				panic("mock out the GetTodo method")
 //			},
-//			GetTodoListFunc: func() ([]models.Todo, error) {
+//			GetTodoListFunc: func(uid uint) ([]models.Todo, error) {
 //				panic("mock out the GetTodoList method")
 //			},
-//			UpdateTodoFunc: func(id uint, title string, body string) error {
+//			UpdateTodoFunc: func(uid uint, id uint, title string, body string) error {
 //				panic("mock out the UpdateTodo method")
 //			},
 //		}
@@ -38,21 +38,23 @@ var _ TodoService = &TodoServiceMock{}
 //	}
 type TodoServiceMock struct {
 	// CreateTodoFunc mocks the CreateTodo method.
-	CreateTodoFunc func(title string, body string) error
+	CreateTodoFunc func(uid uint, title string, body string) error
 
 	// GetTodoFunc mocks the GetTodo method.
-	GetTodoFunc func(id uint) (models.Todo, error)
+	GetTodoFunc func(uid uint, id uint) (models.Todo, error)
 
 	// GetTodoListFunc mocks the GetTodoList method.
-	GetTodoListFunc func() ([]models.Todo, error)
+	GetTodoListFunc func(uid uint) ([]models.Todo, error)
 
 	// UpdateTodoFunc mocks the UpdateTodo method.
-	UpdateTodoFunc func(id uint, title string, body string) error
+	UpdateTodoFunc func(uid uint, id uint, title string, body string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// CreateTodo holds details about calls to the CreateTodo method.
 		CreateTodo []struct {
+			// UID is the uid argument value.
+			UID uint
 			// Title is the title argument value.
 			Title string
 			// Body is the body argument value.
@@ -60,14 +62,20 @@ type TodoServiceMock struct {
 		}
 		// GetTodo holds details about calls to the GetTodo method.
 		GetTodo []struct {
+			// UID is the uid argument value.
+			UID uint
 			// ID is the id argument value.
 			ID uint
 		}
 		// GetTodoList holds details about calls to the GetTodoList method.
 		GetTodoList []struct {
+			// UID is the uid argument value.
+			UID uint
 		}
 		// UpdateTodo holds details about calls to the UpdateTodo method.
 		UpdateTodo []struct {
+			// UID is the uid argument value.
+			UID uint
 			// ID is the id argument value.
 			ID uint
 			// Title is the title argument value.
@@ -83,21 +91,23 @@ type TodoServiceMock struct {
 }
 
 // CreateTodo calls CreateTodoFunc.
-func (mock *TodoServiceMock) CreateTodo(title string, body string) error {
+func (mock *TodoServiceMock) CreateTodo(uid uint, title string, body string) error {
 	if mock.CreateTodoFunc == nil {
 		panic("TodoServiceMock.CreateTodoFunc: method is nil but TodoService.CreateTodo was just called")
 	}
 	callInfo := struct {
+		UID   uint
 		Title string
 		Body  string
 	}{
+		UID:   uid,
 		Title: title,
 		Body:  body,
 	}
 	mock.lockCreateTodo.Lock()
 	mock.calls.CreateTodo = append(mock.calls.CreateTodo, callInfo)
 	mock.lockCreateTodo.Unlock()
-	return mock.CreateTodoFunc(title, body)
+	return mock.CreateTodoFunc(uid, title, body)
 }
 
 // CreateTodoCalls gets all the calls that were made to CreateTodo.
@@ -105,10 +115,12 @@ func (mock *TodoServiceMock) CreateTodo(title string, body string) error {
 //
 //	len(mockedTodoService.CreateTodoCalls())
 func (mock *TodoServiceMock) CreateTodoCalls() []struct {
+	UID   uint
 	Title string
 	Body  string
 } {
 	var calls []struct {
+		UID   uint
 		Title string
 		Body  string
 	}
@@ -119,19 +131,21 @@ func (mock *TodoServiceMock) CreateTodoCalls() []struct {
 }
 
 // GetTodo calls GetTodoFunc.
-func (mock *TodoServiceMock) GetTodo(id uint) (models.Todo, error) {
+func (mock *TodoServiceMock) GetTodo(uid uint, id uint) (models.Todo, error) {
 	if mock.GetTodoFunc == nil {
 		panic("TodoServiceMock.GetTodoFunc: method is nil but TodoService.GetTodo was just called")
 	}
 	callInfo := struct {
-		ID uint
+		UID uint
+		ID  uint
 	}{
-		ID: id,
+		UID: uid,
+		ID:  id,
 	}
 	mock.lockGetTodo.Lock()
 	mock.calls.GetTodo = append(mock.calls.GetTodo, callInfo)
 	mock.lockGetTodo.Unlock()
-	return mock.GetTodoFunc(id)
+	return mock.GetTodoFunc(uid, id)
 }
 
 // GetTodoCalls gets all the calls that were made to GetTodo.
@@ -139,10 +153,12 @@ func (mock *TodoServiceMock) GetTodo(id uint) (models.Todo, error) {
 //
 //	len(mockedTodoService.GetTodoCalls())
 func (mock *TodoServiceMock) GetTodoCalls() []struct {
-	ID uint
+	UID uint
+	ID  uint
 } {
 	var calls []struct {
-		ID uint
+		UID uint
+		ID  uint
 	}
 	mock.lockGetTodo.RLock()
 	calls = mock.calls.GetTodo
@@ -151,16 +167,19 @@ func (mock *TodoServiceMock) GetTodoCalls() []struct {
 }
 
 // GetTodoList calls GetTodoListFunc.
-func (mock *TodoServiceMock) GetTodoList() ([]models.Todo, error) {
+func (mock *TodoServiceMock) GetTodoList(uid uint) ([]models.Todo, error) {
 	if mock.GetTodoListFunc == nil {
 		panic("TodoServiceMock.GetTodoListFunc: method is nil but TodoService.GetTodoList was just called")
 	}
 	callInfo := struct {
-	}{}
+		UID uint
+	}{
+		UID: uid,
+	}
 	mock.lockGetTodoList.Lock()
 	mock.calls.GetTodoList = append(mock.calls.GetTodoList, callInfo)
 	mock.lockGetTodoList.Unlock()
-	return mock.GetTodoListFunc()
+	return mock.GetTodoListFunc(uid)
 }
 
 // GetTodoListCalls gets all the calls that were made to GetTodoList.
@@ -168,8 +187,10 @@ func (mock *TodoServiceMock) GetTodoList() ([]models.Todo, error) {
 //
 //	len(mockedTodoService.GetTodoListCalls())
 func (mock *TodoServiceMock) GetTodoListCalls() []struct {
+	UID uint
 } {
 	var calls []struct {
+		UID uint
 	}
 	mock.lockGetTodoList.RLock()
 	calls = mock.calls.GetTodoList
@@ -178,15 +199,17 @@ func (mock *TodoServiceMock) GetTodoListCalls() []struct {
 }
 
 // UpdateTodo calls UpdateTodoFunc.
-func (mock *TodoServiceMock) UpdateTodo(id uint, title string, body string) error {
+func (mock *TodoServiceMock) UpdateTodo(uid uint, id uint, title string, body string) error {
 	if mock.UpdateTodoFunc == nil {
 		panic("TodoServiceMock.UpdateTodoFunc: method is nil but TodoService.UpdateTodo was just called")
 	}
 	callInfo := struct {
+		UID   uint
 		ID    uint
 		Title string
 		Body  string
 	}{
+		UID:   uid,
 		ID:    id,
 		Title: title,
 		Body:  body,
@@ -194,7 +217,7 @@ func (mock *TodoServiceMock) UpdateTodo(id uint, title string, body string) erro
 	mock.lockUpdateTodo.Lock()
 	mock.calls.UpdateTodo = append(mock.calls.UpdateTodo, callInfo)
 	mock.lockUpdateTodo.Unlock()
-	return mock.UpdateTodoFunc(id, title, body)
+	return mock.UpdateTodoFunc(uid, id, title, body)
 }
 
 // UpdateTodoCalls gets all the calls that were made to UpdateTodo.
@@ -202,11 +225,13 @@ func (mock *TodoServiceMock) UpdateTodo(id uint, title string, body string) erro
 //
 //	len(mockedTodoService.UpdateTodoCalls())
 func (mock *TodoServiceMock) UpdateTodoCalls() []struct {
+	UID   uint
 	ID    uint
 	Title string
 	Body  string
 } {
 	var calls []struct {
+		UID   uint
 		ID    uint
 		Title string
 		Body  string
@@ -214,5 +239,171 @@ func (mock *TodoServiceMock) UpdateTodoCalls() []struct {
 	mock.lockUpdateTodo.RLock()
 	calls = mock.calls.UpdateTodo
 	mock.lockUpdateTodo.RUnlock()
+	return calls
+}
+
+// Ensure, that AuthServiceMock does implement AuthService.
+// If this is not the case, regenerate this file with moq.
+var _ AuthService = &AuthServiceMock{}
+
+// AuthServiceMock is a mock implementation of AuthService.
+//
+//	func TestSomethingThatUsesAuthService(t *testing.T) {
+//
+//		// make and configure a mocked AuthService
+//		mockedAuthService := &AuthServiceMock{
+//			SignInFunc: func(email string, password string) (string, error) {
+//				panic("mock out the SignIn method")
+//			},
+//			SignOutFunc: func(token string) error {
+//				panic("mock out the SignOut method")
+//			},
+//			SignUpFunc: func(email string, password string) error {
+//				panic("mock out the SignUp method")
+//			},
+//		}
+//
+//		// use mockedAuthService in code that requires AuthService
+//		// and then make assertions.
+//
+//	}
+type AuthServiceMock struct {
+	// SignInFunc mocks the SignIn method.
+	SignInFunc func(email string, password string) (string, error)
+
+	// SignOutFunc mocks the SignOut method.
+	SignOutFunc func(token string) error
+
+	// SignUpFunc mocks the SignUp method.
+	SignUpFunc func(email string, password string) error
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// SignIn holds details about calls to the SignIn method.
+		SignIn []struct {
+			// Email is the email argument value.
+			Email string
+			// Password is the password argument value.
+			Password string
+		}
+		// SignOut holds details about calls to the SignOut method.
+		SignOut []struct {
+			// Token is the token argument value.
+			Token string
+		}
+		// SignUp holds details about calls to the SignUp method.
+		SignUp []struct {
+			// Email is the email argument value.
+			Email string
+			// Password is the password argument value.
+			Password string
+		}
+	}
+	lockSignIn  sync.RWMutex
+	lockSignOut sync.RWMutex
+	lockSignUp  sync.RWMutex
+}
+
+// SignIn calls SignInFunc.
+func (mock *AuthServiceMock) SignIn(email string, password string) (string, error) {
+	if mock.SignInFunc == nil {
+		panic("AuthServiceMock.SignInFunc: method is nil but AuthService.SignIn was just called")
+	}
+	callInfo := struct {
+		Email    string
+		Password string
+	}{
+		Email:    email,
+		Password: password,
+	}
+	mock.lockSignIn.Lock()
+	mock.calls.SignIn = append(mock.calls.SignIn, callInfo)
+	mock.lockSignIn.Unlock()
+	return mock.SignInFunc(email, password)
+}
+
+// SignInCalls gets all the calls that were made to SignIn.
+// Check the length with:
+//
+//	len(mockedAuthService.SignInCalls())
+func (mock *AuthServiceMock) SignInCalls() []struct {
+	Email    string
+	Password string
+} {
+	var calls []struct {
+		Email    string
+		Password string
+	}
+	mock.lockSignIn.RLock()
+	calls = mock.calls.SignIn
+	mock.lockSignIn.RUnlock()
+	return calls
+}
+
+// SignOut calls SignOutFunc.
+func (mock *AuthServiceMock) SignOut(token string) error {
+	if mock.SignOutFunc == nil {
+		panic("AuthServiceMock.SignOutFunc: method is nil but AuthService.SignOut was just called")
+	}
+	callInfo := struct {
+		Token string
+	}{
+		Token: token,
+	}
+	mock.lockSignOut.Lock()
+	mock.calls.SignOut = append(mock.calls.SignOut, callInfo)
+	mock.lockSignOut.Unlock()
+	return mock.SignOutFunc(token)
+}
+
+// SignOutCalls gets all the calls that were made to SignOut.
+// Check the length with:
+//
+//	len(mockedAuthService.SignOutCalls())
+func (mock *AuthServiceMock) SignOutCalls() []struct {
+	Token string
+} {
+	var calls []struct {
+		Token string
+	}
+	mock.lockSignOut.RLock()
+	calls = mock.calls.SignOut
+	mock.lockSignOut.RUnlock()
+	return calls
+}
+
+// SignUp calls SignUpFunc.
+func (mock *AuthServiceMock) SignUp(email string, password string) error {
+	if mock.SignUpFunc == nil {
+		panic("AuthServiceMock.SignUpFunc: method is nil but AuthService.SignUp was just called")
+	}
+	callInfo := struct {
+		Email    string
+		Password string
+	}{
+		Email:    email,
+		Password: password,
+	}
+	mock.lockSignUp.Lock()
+	mock.calls.SignUp = append(mock.calls.SignUp, callInfo)
+	mock.lockSignUp.Unlock()
+	return mock.SignUpFunc(email, password)
+}
+
+// SignUpCalls gets all the calls that were made to SignUp.
+// Check the length with:
+//
+//	len(mockedAuthService.SignUpCalls())
+func (mock *AuthServiceMock) SignUpCalls() []struct {
+	Email    string
+	Password string
+} {
+	var calls []struct {
+		Email    string
+		Password string
+	}
+	mock.lockSignUp.RLock()
+	calls = mock.calls.SignUp
+	mock.lockSignUp.RUnlock()
 	return calls
 }
